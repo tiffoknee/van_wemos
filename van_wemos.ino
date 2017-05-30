@@ -9,34 +9,42 @@
 #include <DHT.h>
 #include <Adafruit_NeoPixel.h>
 
-#define ledPin D5
-#define dhtPin D7        //define as DHTPIN the Pin 3 used to connect the Sensor
-#define DHTTYPE DHT11    //define the sensor used(DHT11)
-#define fanPin D6
+const int OFF = 0;
+const int ON = 1;
+const int AUTO = 2;
 
-unsigned long ledMillis = 0;
+#define ledPin D5
+#define dhtIntInPin D7
+#define dhtIntOutPin D1
+#define dhtExtOutPin D2
+#define dhtExtInPin D3 //define DHT pins for all four sensors on heat exchanger
+#define DHTTYPE DHT11    //define the sensor used(DHT11)
+#define fanPin D6 //run both fans off this pin
+#define fanButtonPin D4 // momentary press button, state machine
+#define ledButtonPin D1 // press button, state machine with hold
+
+int fanState = OFF; // 0 == off, 1 == on, 2 == auto
+
+unsigned long ledButtonMillis = 0;
 unsigned long dhtLastCheck = 0;
+unsigned long fanButtonLastPressed = 0;
 
 long dhtInterval = 6000;           // milliseconds between sensor checks
 
+float maxTemp = 22.00;
+float maxHumidity = 80.00;
 
-DHT dht(dhtPin, DHTTYPE);//create an instance of DHT
+
+DHT dhtIntIn(dhtIntInPin, DHTTYPE);//create an instance of DHT
+DHT dhtExtIn(dhtExtInPin, DHTTYPE);//create an instance of DHT
+DHT dhtIntOut(dhtIntOutPin, DHTTYPE);//create an instance of DHT
+DHT dhtExtOut(dhtExtOutPin, DHTTYPE);//create an instance of DHT
 
 const char* ssid = "Workshop";             //!!!!!!!!!!!!!!!!!!!!! modify this
 const char* password = "bananabanana";                //!!!!!!!!!!!!!!!!!!!!!modify this
  
-//int fanPin = D5;          
-
-// Parameter 1 = number of pixels in strip
-// Parameter 2 = Arduino pin number (most are valid)
-// Parameter 3 = pixel type flags, add together as needed:
-//   NEO_KHZ800  800 KHz bitstream (most NeoPixel products w/WS2812 LEDs)
-//   NEO_KHZ400  400 KHz (classic 'v1' (not v2) FLORA pixels, WS2811 drivers)
-//   NEO_GRB     Pixels are wired for GRB bitstream (most NeoPixel products)
-//   NEO_RGB     Pixels are wired for RGB bitstream (v1 FLORA pixels, not v2)
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(6, ledPin, NEO_GRB + NEO_KHZ800);
-
-  
+ 
 WiFiServer server(80);
  
 void setup() {
@@ -46,7 +54,9 @@ void setup() {
   delay(10);
   
   pinMode(fanPin, OUTPUT);
-//  pinMode(ledPin, OUTPUT);
+  pinMode(fanButtonPin, INPUT);    // declare pushbutton as input
+  pinMode(ledButtonPin, INPUT);    // declare pushbutton as input
+  
   digitalWrite(fanPin, LOW);
  
   // Connect to WiFi network
@@ -74,22 +84,26 @@ void setup() {
   Serial.print("http://");
   Serial.print(WiFi.localIP());
   Serial.println("/");
-  
+
+  // end wifi setup 
+
+  //DHT setup
   delay(6000);           //wait 6 seconds
   Serial.println("Temperature and Humidity test!");//print on Serial monitor
-  Serial.println("T(C) \tH(%)");                   //print on Serial monitor
-  dht.begin();           //initialize the Serial communication
-
-  pixels.begin(); // This initializes the NeoPixel library.
+  Serial.println("T(C) \tH(%)");  //print on Serial monitor
   
+  dhtIntIn.begin();
+  dhtExtIn.begin();
+  dhtIntOut.begin();
+  dhtExtOut.begin();          //initialize the Serial communication
+  
+  //end DHT setup
 
- 
+  // LEDs
+  pixels.begin(); // This initializes the NeoPixel library.
+  // END LEDS
 
 //  pinMode(fanPin, INPUT);
-
-
- 
-
 
 }
 
@@ -97,7 +111,28 @@ void setup() {
 void loop() {
 
   unsigned long currentMillis = millis();
+
+  val = digitalRead(fanButtonPin);  // read fan button
   
+  if (val == LOW && (currentMillis - fanButtonLastPressed >= 100) {  // check if the input is LOW (button pressed) and debounce
+    
+    fanButtonLastPressed = currentMillis;
+    //is the button momentary click? I think so!
+    
+    if(fanState == OFF){
+      fanState = ON;
+      digitalWrite(fanPin, HIGH);     
+    }
+
+    if(fanState == ON){
+      fanState = AUTO;   
+    }
+
+    if(fanState == AUTO){
+      fanState = OFF;
+      digitalWrite(fanPin, LOW);
+    }
+  }
 
 int led;
   for(led=0; led <=6; led++)
@@ -113,12 +148,13 @@ int led;
     setColor(led,255,0,255,100); //
   }
   
-  if(currentMillis - dhtLastCheck >= dhtInterval){  //check every dhtInterval milliseconds
+  if((currentMillis - dhtLastCheck >= dhtInterval) ||
+  (fanButtonLastPressed == currentMillis && fanState == AUTO){  //check every dhtInterval milliseconds OR if fan is set to auto
 
-    float h = dht.readHumidity();    // reading Humidity 
-    float t = dht.readTemperature(); // read Temperature as Celsius (the default)
+    float h = dhtIntIn.readHumidity();    // reading Humidity 
+    float t = dhtIntIn.readTemperature(); // read Temperature as Celsius (the default)
     // check if any reads failed and exit early (to try again).
-      if (isnan(h) || isnan(t)) {    
+    if (isnan(h) || isnan(t)) {    
       Serial.println("Failed to read from DHT sensor!");
       return;
     }
@@ -126,6 +162,32 @@ int led;
     Serial.print("\t");
     Serial.println(h, 2);  //print the humidity
 
+    if(fanState == AUTO){ //if fan is set to auto, check the temp and humidity
+      if((t >= maxTemp || h >= maxHumidity){
+        digitalWrite(fanPin, HIGH);        
+      }else{
+        digitalWrite(fanPin, LOW);        
+      }
+    }
+     
+    
+    dhtLastCheck = currentMillis; //reset dhtLastCheck
+  }
+
+
+  
+
+   
+  if (request.indexOf("/FAN=ON") != -1) {
+    digitalWrite(fanPin, HIGH);
+    fanState = ON;
+  } 
+  if (request.indexOf("/FAN=OFF") != -1){
+    digitalWrite(fanPin, LOW);
+    fanState = OFF;
+  }
+   if (request.indexOf("/FAN=AUTO") != -1){   
+    fanState = AUTO;
   }
   
   // Check if a client has connected
@@ -145,19 +207,7 @@ int led;
   Serial.println(request);
   client.flush();
  
-  // Match the request
- 
-  int FANvalue = LOW;
   
-  
-  if (request.indexOf("/FAN=ON") != -1) {
-    digitalWrite(fanPin, HIGH);
-    FANvalue = HIGH;
-  } 
-  if (request.indexOf("/FAN=OFF") != -1){
-    digitalWrite(fanPin, LOW);
-    FANvalue = LOW;
-  }
 
 //  if (request.indexOf("/FAN=") != -1){
 //
