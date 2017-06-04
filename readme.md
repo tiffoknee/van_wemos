@@ -8,9 +8,13 @@ Note to self: DHT11 sensors are apparently a bit rubbish and granularity is 1 de
 
 Next steps: 
 
-- add a threshold temp/humidity at which the fans turn on
-- add a button that turns fans on/off/auto
-- add a button to cycle LED effects
-- make wifi a hotspot
-- add known wifi networks, connect to these and upload data where available
-- log and display data
+- add a threshold temp/humidity at which the fans turn on DONE
+- add a button that turns fans on/off/auto DONE
+- add a button to cycle LED effects DONE
+- make wifi a hotspot ON HOLD
+- add known wifi networks DONE
+
+- connect to these and upload data where available
+- make LEDs more interesting. respond to button
+- post data to influxdb
+- return LEDs to current settings after fan feedback
