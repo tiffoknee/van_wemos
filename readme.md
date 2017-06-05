@@ -13,8 +13,7 @@ Next steps:
 - add a button to cycle LED effects DONE
 - make wifi a hotspot ON HOLD
 - add known wifi networks DONE
+- make LEDs more interesting. respond to button DONE
+- return LEDs to current settings after fan feedback DONE
 
-- connect to these and upload data where available
-- make LEDs more interesting. respond to button
-- post data to influxdb
-- return LEDs to current settings after fan feedback
+- post data to influxdb - TO TEST
