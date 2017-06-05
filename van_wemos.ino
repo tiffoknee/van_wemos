@@ -48,8 +48,8 @@ int port = 8888;
 #define ledButtonPin D7 // press button, state machine with hold
 
 int currentR = 127;
-int currentG = 127;
-int currentB = 127;
+int currentG = 100;
+int currentB = 80;
 int fanControlState = AUTO; // 0 == off, 1 == on, 2 == auto
 int fanState = AUTO;
 
@@ -302,6 +302,7 @@ void loop() {
     if (activeLEDs == 0) {
       colorWipe(pixels.Color(0, 0, 0), 5, 6);
     } else {
+      colorWipe(pixels.Color(0, 0, 0), 1, 6);
       colorWipe(pixels.Color(currentR, currentG, currentB), 5, activeLEDs - 1);
     }
     
@@ -434,15 +435,15 @@ int cycleColour(int i) {
       break;
 
     case 2:  // Red
-      currentR = 100;
+      currentR = 180;
       currentG = 2;
-      currentB = 2;
+      currentB = 10;
       break;
 
     case 3:   // dark blue
-      currentR = 2;
+      currentR = 50;
       currentG = 2;
-      currentB = 100;
+      currentB = 170;
       break;
 
 
