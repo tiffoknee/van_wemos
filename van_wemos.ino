@@ -231,7 +231,7 @@ void loop() {
         if (showColour > 4)
           showColour = 0;
         cycleColour(showColour);
-         colorWipe(pixels.Color(currentR, currentG, currentB), 5, activeLEDs - 1);
+        colorWipe(pixels.Color(currentR, currentG, currentB), 5, activeLEDs - 1);
       }
 
 
@@ -270,7 +270,6 @@ void loop() {
       {
         setColor(led, 0, 255, 0, 100); //green
       }
-      colorWipe(pixels.Color(currentR, currentG, currentB), 5, activeLEDs - 1);
 
 
     }
@@ -282,7 +281,7 @@ void loop() {
       {
         setColor(led, 0, 0, 255, 100); //blue
       }
-      colorWipe(pixels.Color(currentR, currentG, currentB), 5, activeLEDs - 1);
+
     }
 
     else if (fanControlState == AUTO) {
@@ -295,11 +294,19 @@ void loop() {
       {
         setColor(led, 255, 0, 0, 100); //blue
       }
-      colorWipe(pixels.Color(currentR, currentG, currentB), 5, activeLEDs - 1);
+
+
 
     }
+    
+    if (activeLEDs == 0) {
+      colorWipe(pixels.Color(0, 0, 0), 5, 6);
+    } else {
+      colorWipe(pixels.Color(currentR, currentG, currentB), 5, activeLEDs - 1);
+    }
+    
     fanButtonLastPressed = currentMillis;
-    //is the button momentary click? I think so!
+    
   }
 
 
@@ -427,17 +434,17 @@ int cycleColour(int i) {
       break;
 
     case 2:  // Red
-      currentR = 180;
-      currentG = 0;
-      currentB = 0;
+      currentR = 100;
+      currentG = 2;
+      currentB = 2;
       break;
 
     case 3:   // dark blue
-      currentR = 0;
-      currentG = 0;
+      currentR = 2;
+      currentG = 2;
       currentB = 100;
       break;
-      
+
 
     case 4:   // yellow
       currentR = 200;
@@ -526,33 +533,6 @@ String checkSensor(float h, float t, String sensor) {
     return "," + sensor + "Humidity value=" + String(h) + ", " + sensor + "Temperature value=" + String(t);
   }
 
-}
-
-void rainbow(char wait) {
-  short i, j;
-
-  for (j = 0; j < 256; j++) {
-    for (i = 0; i < pixels.numPixels(); i++) {
-      pixels.setPixelColor(i, Wheel((i + j) & 255));
-    }
-    pixels.show();
-    delay(wait);
-  }
-}
-
-// Input a value 0 to 255 to get a color value.
-// The colours are a transition r - g - b - back to r.
-int Wheel(byte WheelPos) {
-  WheelPos = 255 - WheelPos;
-  if (WheelPos < 85) {
-    return pixels.Color(255 - WheelPos * 3, 0, WheelPos * 3);
-  }
-  if (WheelPos < 170) {
-    WheelPos -= 85;
-    return pixels.Color(0, WheelPos * 3, 255 - WheelPos * 3);
-  }
-  WheelPos -= 170;
-  return pixels.Color(WheelPos * 3, 255 - WheelPos * 3, 0);
 }
 
 
