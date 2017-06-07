@@ -20,6 +20,8 @@
 //};
 
 //int noKnown = 3;
+// the IP address of the InfluxDB host
+//byte host[] = {xx, xx, xx, xx};
 
 const int OFF = 0;
 const int ON = 1;
@@ -30,8 +32,7 @@ const int ledsUP  = 1;
 
 int status = WL_IDLE_STATUS;     // the Wifi radio's status
 
-// the IP address of the InfluxDB host
-byte host[] = {88, 80, 191, 61};
+
 
 // the port that the InfluxDB UDP plugin is listening on
 int port = 8888;
@@ -71,7 +72,7 @@ long prev_secs_held; // How long the button was held in the previous check
 byte previous = HIGH;
 unsigned long firstTime; // how long since the button was first pressed
 
-long dhtInterval = 30000;           // milliseconds between sensor checks
+long dhtInterval = 6000;           // milliseconds between sensor checks
 long checkForWifiInterval = 30000;  //milliseconds between checks for wifi
 
 float maxTemp = 23.00;
@@ -159,8 +160,7 @@ void loop() {
   millis_held = (millis() - firstTime);
   secs_held = millis_held / 1000;
 
-  // This if statement is a basic debouncing tool, the button must be pushed for at least
-  // 100 milliseconds in a row for it to be considered as a push.
+//debounce
   if (millis_held > 50) {
 
     if (current == HIGH && secs_held > prev_secs_held) {
@@ -244,7 +244,7 @@ void loop() {
   //end handle LED button
 
   if (WiFi.status() == WL_CONNECTED) {
-    lineSend += ("epoch_time value=" + now); // build a string to post to the influxdb
+    //lineSend += ("epoch_time value=" + now); // build a string to post to the influxdb
     //Serial.println(lineSend);
   }
 
@@ -338,12 +338,17 @@ void loop() {
 
 
     if (WiFi.status() == WL_CONNECTED) {
-      lineSend += ", fans value=" + String(fanState);
+      if(fanState == OFF){
+        lineSend += "\nvan_metrics fans=0i";
+      }else{
+        lineSend += "\nvan_metrics fans=1i";
+      }
+      
       Serial.println(lineSend);
 
 
-      Serial.println(" send data (disabled)");
-      //sendData(lineSend); //send the data
+      //Serial.println(" send data (disabled)");
+      sendData(lineSend); //send the data
     }
 
     dhtLastCheck = currentMillis; //reset dhtLastCheck
@@ -531,7 +536,7 @@ String checkSensor(float h, float t, String sensor) {
     // concatenate the temperature into the line protocol
     //Serial.println(","+sensor + "Humidity value=" + String(h) + ", "+ sensor +"Temperature value=" + String(t));
 
-    return "," + sensor + "Humidity value=" + String(h) + ", " + sensor + "Temperature value=" + String(t);
+    return "\nvan_metrics,sensor=" + sensor + " temperature=" + String(t) + "\nvan_metrics,sensor=" + sensor + " humidity=" + String(h);
   }
 
 }
