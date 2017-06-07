@@ -16,4 +16,4 @@ Next steps:
 - make LEDs more interesting. respond to button DONE
 - return LEDs to current settings after fan feedback DONE
 
-- post data to influxdb - TO TEST
+- post data to influxdb - DONE
