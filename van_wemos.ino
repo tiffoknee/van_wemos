@@ -42,7 +42,7 @@ int port = 8888;
 #define dhtIntOutPin D3
 #define dhtExtInPin D2 //define DHT pins for all four sensors on heat exchanger
 #define dhtExtOutPin D1
-#define DHTTYPE DHT11    //define the sensor used(DHT11)
+#define DHTTYPE DHT22   //define the sensor used(DHT11)
 #define inFanPin D5
 #define outFanPin D0
 #define fanButtonPin D8 // momentary press button, state machine
