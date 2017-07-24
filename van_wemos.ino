@@ -38,10 +38,11 @@ int status = WL_IDLE_STATUS;     // the Wifi radio's status
 int port = 8888;
 
 #define ledPin D6
-#define dhtIntInPin D4
-#define dhtIntOutPin D3
-#define dhtExtInPin D2 //define DHT pins for all four sensors on heat exchanger
-#define dhtExtOutPin D1
+#define dhtIntInPin D1 //Internal intake (air goes OUT)
+#define dhtIntOutPin D2 //Internal exhaust (air comes IN)
+#define dhtExtOutPin D3 //External exhaust (air goes OUT)
+#define dhtExtInPin D4 //External intake (air comes IN)
+
 #define DHTTYPE DHT22   //define the sensor used(DHT11)
 #define inFanPin D5
 #define outFanPin D0
@@ -315,10 +316,10 @@ void loop() {
       (fanButtonLastPressed == currentMillis && fanControlState == AUTO)) {
     //check every dhtInterval milliseconds OR if fan is set to auto
 
-    lineSend += checkSensor(dhtIntIn.readHumidity(), dhtIntIn.readTemperature(), "intIn");
-    lineSend += checkSensor(dhtIntOut.readHumidity(), dhtIntOut.readTemperature(), "intOut");
-    lineSend += checkSensor(dhtExtIn.readHumidity(), dhtExtIn.readTemperature(), "extIn");
-    lineSend += checkSensor(dhtExtOut.readHumidity(), dhtExtOut.readTemperature(), "extOut");
+    lineSend += checkSensor(dhtIntIn.readHumidity(), dhtIntIn.readTemperature(), "Internal-Intake");
+    lineSend += checkSensor(dhtIntOut.readHumidity(), dhtIntOut.readTemperature(), "Internal-Exhaust");
+    lineSend += checkSensor(dhtExtIn.readHumidity(), dhtExtIn.readTemperature(), "External-Intake");
+    lineSend += checkSensor(dhtExtOut.readHumidity(), dhtExtOut.readTemperature(), "External-Exhaust");
 
     if (fanControlState == AUTO) { //if fan is set to auto, check the temp and humidity
       if ((dhtIntOut.readTemperature() >= maxTemp || dhtIntOut.readHumidity() >= maxHumidity)) {
